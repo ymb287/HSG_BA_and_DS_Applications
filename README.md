@@ -88,6 +88,8 @@ Each person (Jakob, Yannik, Sonya, Jules) works in their designated folder to ke
    git push origin main
    ```
 
+
+Alternatively you can also work with the source control in VS Code
 ---
 
 
