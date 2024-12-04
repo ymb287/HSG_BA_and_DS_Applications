@@ -11,26 +11,6 @@ import joblib
 import pandas as pd
 import requests, json
 
-# API
-city_name = 'Melbourne'
-API_KEY = '6456aee2ec2d47df861f5e544387a73c'
-lat = -37.8142454
-lon = 144.9631732
-
-complete_url = f"https://pro.openweathermap.org/data/2.5/forecast/hourly?lat={lat}&lon={lon}&appid={API_KEY}"
-
-response = requests.get(complete_url)
-
-x = response.json()
-
-x['list'][0]
-
-df = pd.DataFrame(columns=['Timestamp', 'temp', 'humidity', 'rain_1h', 'clouds_all'])
-
-
-
-IsPublicHoliday,temp,humidity,rain_1h,clouds_all,Weekday_2,Weekday_3,Weekday_4,Weekday_5,Weekday_6,Weekday_7,Month_2,Month_3,Month_4,Month_5,Month_6,Month_7,Month_8,Month_9,Month_10,Month_11,Month_12,Season_Spring,Season_Summer,Season_Winter
-
 def load_model(filename):
     """Load a model from a file."""
     if os.path.exists(filename):
