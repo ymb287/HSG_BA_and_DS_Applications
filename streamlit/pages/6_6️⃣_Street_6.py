@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded")
 alt.themes.enable("dark")
 
-street = 'Lonsdale St (South)'
+street = 'Missing'
 forecast_df = model(street)
 forecast_df['Date'] = pd.to_datetime(forecast_df['Timestamp']).dt.date
 forecast_df['Hour'] = pd.to_datetime(forecast_df['Timestamp']).dt.hour
