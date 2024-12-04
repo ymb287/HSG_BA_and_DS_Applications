@@ -26,10 +26,6 @@ daily_summary.rename(columns={'max': 'Max Count', 'min': 'Min Count'}, inplace=T
 selected_day = st.sidebar.selectbox("Select a Day", options=forecast_df['Date'])
 
 
-
-
-
-
 # Display layout
 st.markdown(f"### Pedestrian Forecast for {street}")
 
@@ -44,14 +40,12 @@ with col[0]:
         help="Comparison to the previous week's average pedestrian count."
     )
 
-    # CHECK
     st.markdown("#### Daily Max/Min Summary")
     st.dataframe(daily_summary, height=400)
 
 with col[1]:
     st.markdown("#### 16-Day Forecast")
 
-    # CHECK
     chart = alt.Chart(forecast_df).mark_line(point=True).encode(
         x=alt.X('Timestamp:T', title='Timestamp'),
         y=alt.Y('Predicted Count:Q', title='Pedestrian Count'),

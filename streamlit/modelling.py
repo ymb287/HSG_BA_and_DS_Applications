@@ -9,11 +9,27 @@ import xgboost as xgb
 from xgboost import XGBRegressor
 import joblib
 import pandas as pd
+import requests, json
+
+# API
+city_name = 'Melbourne'
+API_KEY = '6456aee2ec2d47df861f5e544387a73c'
+lat = -37.8142454
+lon = 144.9631732
+
+complete_url = f"https://pro.openweathermap.org/data/2.5/forecast/hourly?lat={lat}&lon={lon}&appid={API_KEY}"
+
+response = requests.get(complete_url)
+
+x = response.json()
+
+x['list'][0]
+
+df = pd.DataFrame(columns=['Timestamp', 'temp', 'humidity', 'rain_1h', 'clouds_all'])
 
 
-# def save_model(model, filename):
-#     """Save the trained model to a file."""
-#     joblib.dump(model, filename)
+
+IsPublicHoliday,temp,humidity,rain_1h,clouds_all,Weekday_2,Weekday_3,Weekday_4,Weekday_5,Weekday_6,Weekday_7,Month_2,Month_3,Month_4,Month_5,Month_6,Month_7,Month_8,Month_9,Month_10,Month_11,Month_12,Season_Spring,Season_Summer,Season_Winter
 
 def load_model(filename):
     """Load a model from a file."""
@@ -78,34 +94,10 @@ def jakob_data_2():
 def model(street):
     X_train, X_test, y_train, y_test = jakob_data_2()
 
-
-    # Best hyperparameters for each sensor
-    # best_params = {
-    #     'Little Collins St-Swanston St (East)': {'subsample': 1.0, 'n_estimators': 400, 'min_child_weight': 3, 'max_depth': 7, 'learning_rate': 0.1, 'gamma': 0.1, 'colsample_bytree': 1.0},
-    #     'Faraday St-Lygon St (West)': {'subsample': 1.0, 'n_estimators': 400, 'min_child_weight': 3, 'max_depth': 5, 'learning_rate': 0.1, 'gamma': 0.1, 'colsample_bytree': 0.8},
-    #     'Melbourne Central': {'subsample': 0.6, 'n_estimators': 400, 'min_child_weight': 1, 'max_depth': 7, 'learning_rate': 0.1, 'gamma': 0, 'colsample_bytree': 1.0},
-    #     'Chinatown-Lt Bourke St (South)': {'subsample': 1.0, 'n_estimators': 400, 'min_child_weight': 3, 'max_depth': 7, 'learning_rate': 0.1, 'gamma': 0.2, 'colsample_bytree': 0.8},
-    #     'Lonsdale St (South)': {'subsample': 0.8, 'n_estimators': 300, 'min_child_weight': 1, 'max_depth': 5, 'learning_rate': 0.2, 'gamma': 0, 'colsample_bytree': 1.0}
-    # }
-
     model_path = f"streamlit/models/{street}_model.joblib"
-    # os.makedirs("streamlit/models", exist_ok=True)
 
-    # Check if the model is already saved
     model = load_model(model_path)
 
-    # if not model:
-    #     print('Not loaded')
-    #     # Train the model if not already saved
-    #     if street in best_params:
-    #         params = best_params[street]
-    #         model = XGBRegressor(objective='reg:squarederror', tree_method='exact', random_state=42, **params)
-    #         model.fit(X_train, y_train[street])
-
-    #         # Save the trained model
-    #         save_model(model, model_path)
-
-    # Predict using the loaded or trained model
     predictions_test = model.predict(X_test)
 
     # Prepare the result DataFrame
