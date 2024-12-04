@@ -11,9 +11,9 @@ import joblib
 import pandas as pd
 
 
-def save_model(model, filename):
-    """Save the trained model to a file."""
-    joblib.dump(model, filename)
+# def save_model(model, filename):
+#     """Save the trained model to a file."""
+#     joblib.dump(model, filename)
 
 def load_model(filename):
     """Load a model from a file."""
@@ -80,30 +80,30 @@ def model(street):
 
 
     # Best hyperparameters for each sensor
-    best_params = {
-        'Little Collins St-Swanston St (East)': {'subsample': 1.0, 'n_estimators': 400, 'min_child_weight': 3, 'max_depth': 7, 'learning_rate': 0.1, 'gamma': 0.1, 'colsample_bytree': 1.0},
-        'Faraday St-Lygon St (West)': {'subsample': 1.0, 'n_estimators': 400, 'min_child_weight': 3, 'max_depth': 5, 'learning_rate': 0.1, 'gamma': 0.1, 'colsample_bytree': 0.8},
-        'Melbourne Central': {'subsample': 0.6, 'n_estimators': 400, 'min_child_weight': 1, 'max_depth': 7, 'learning_rate': 0.1, 'gamma': 0, 'colsample_bytree': 1.0},
-        'Chinatown-Lt Bourke St (South)': {'subsample': 1.0, 'n_estimators': 400, 'min_child_weight': 3, 'max_depth': 7, 'learning_rate': 0.1, 'gamma': 0.2, 'colsample_bytree': 0.8},
-        'Lonsdale St (South)': {'subsample': 0.8, 'n_estimators': 300, 'min_child_weight': 1, 'max_depth': 5, 'learning_rate': 0.2, 'gamma': 0, 'colsample_bytree': 1.0}
-    }
+    # best_params = {
+    #     'Little Collins St-Swanston St (East)': {'subsample': 1.0, 'n_estimators': 400, 'min_child_weight': 3, 'max_depth': 7, 'learning_rate': 0.1, 'gamma': 0.1, 'colsample_bytree': 1.0},
+    #     'Faraday St-Lygon St (West)': {'subsample': 1.0, 'n_estimators': 400, 'min_child_weight': 3, 'max_depth': 5, 'learning_rate': 0.1, 'gamma': 0.1, 'colsample_bytree': 0.8},
+    #     'Melbourne Central': {'subsample': 0.6, 'n_estimators': 400, 'min_child_weight': 1, 'max_depth': 7, 'learning_rate': 0.1, 'gamma': 0, 'colsample_bytree': 1.0},
+    #     'Chinatown-Lt Bourke St (South)': {'subsample': 1.0, 'n_estimators': 400, 'min_child_weight': 3, 'max_depth': 7, 'learning_rate': 0.1, 'gamma': 0.2, 'colsample_bytree': 0.8},
+    #     'Lonsdale St (South)': {'subsample': 0.8, 'n_estimators': 300, 'min_child_weight': 1, 'max_depth': 5, 'learning_rate': 0.2, 'gamma': 0, 'colsample_bytree': 1.0}
+    # }
 
     model_path = f"streamlit/models/{street}_model.joblib"
-    os.makedirs("streamlit/models", exist_ok=True)
+    # os.makedirs("streamlit/models", exist_ok=True)
 
     # Check if the model is already saved
     model = load_model(model_path)
 
-    if not model:
-        print('Not loaded')
-        # Train the model if not already saved
-        if street in best_params:
-            params = best_params[street]
-            model = XGBRegressor(objective='reg:squarederror', tree_method='exact', random_state=42, **params)
-            model.fit(X_train, y_train[street])
+    # if not model:
+    #     print('Not loaded')
+    #     # Train the model if not already saved
+    #     if street in best_params:
+    #         params = best_params[street]
+    #         model = XGBRegressor(objective='reg:squarederror', tree_method='exact', random_state=42, **params)
+    #         model.fit(X_train, y_train[street])
 
-            # Save the trained model
-            save_model(model, model_path)
+    #         # Save the trained model
+    #         save_model(model, model_path)
 
     # Predict using the loaded or trained model
     predictions_test = model.predict(X_test)
@@ -112,7 +112,8 @@ def model(street):
     forecast_df = pd.DataFrame({
         'Timestamp': X_test.index,
         'True Count': y_test[street].values,
-        'Predicted Count': predictions_test
+        'Predicted Count': predictions_test.round().astype(int)
+
     })
 
     return forecast_df
