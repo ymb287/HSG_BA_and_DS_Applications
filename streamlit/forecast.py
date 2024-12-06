@@ -105,7 +105,7 @@ def add_lagged_features(df, target_columns):
 def generate_forecast(progress_bar=None):
         ### Generate the forecast ###
     # Load saved data
-    saved_data = pd.read_csv('streamlit/pedestrian_data_filtered.csv', index_col=0, parse_dates=True)
+    saved_data = pd.read_csv('streamlit/pedestrian_data_filtered_2.csv', index_col=0, parse_dates=True)
     last_timestamp = saved_data.index.max()
 
     new_start_time = int((last_timestamp + timedelta(hours=1)).astimezone(pytz.utc).timestamp())
@@ -200,6 +200,7 @@ def generate_forecast(progress_bar=None):
 
             # Predict the target value for the current row
             predicted_value = round(model.predict(X_current)[0])
+            predicted_value = max(0, predicted_value)
             final_df.at[i, street] = predicted_value
 
             # Update lagged features for the next row
@@ -215,9 +216,13 @@ def generate_forecast(progress_bar=None):
         if progress_bar:
             progress_bar.progress(counter / total_rows)
 
-    # Save the updated data
-    #final_df.to_csv('streamlit/pedestrian_data_filtered.csv', index=True)
 
+    # Save the past data for faster computation
+    now_melbourne = datetime.now(melbourne_tz)
+
+    cutoff_time = now_melbourne - timedelta(hours=3)
+    cutoff_df = final_df[final_df.index <= cutoff_time]
+    cutoff_df.to_csv('streamlit/pedestrian_data_filtered_2.csv', index=True)
 
     return final_df
 

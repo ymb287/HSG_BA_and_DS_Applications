@@ -1,13 +1,17 @@
+import streamlit as st
+from forecast import generate_forecast
 import folium
-import streamlit as st
 from streamlit_folium import st_folium
-import streamlit as st
 import pandas as pd
 import altair as alt
 import plotly.express as px
 from datetime import datetime, timedelta
 import numpy as np
+import pytz
+import altair as alt
 
+
+# Setup Streamlit
 st.set_page_config(
     page_title="Home Page: Melbourne Map",
     page_icon="🚶‍♂️",
@@ -15,12 +19,25 @@ st.set_page_config(
     initial_sidebar_state="expanded")
 alt.themes.enable("dark")
 
-def map():
+# Initialize session state
+if "final_df" not in st.session_state:
+    # Add a placeholder DataFrame in the session state
+    st.session_state["final_df"] = None
 
-    # Create a folium map centered around St. Gallen, Switzerland
+# Functions
+def get_forecast_once():
+    if st.session_state["final_df"] is None:
+        st.write("Generating forecast, please wait...")
+        progress_bar = st.progress(0)  # Show progress bar
+        st.session_state["final_df"] = generate_forecast(progress_bar=progress_bar)
+        st.write("Forecast Complete!")
+    else:
+        pass
+
+def map():
+    # Create a folium map
     m = folium.Map(location=[-37.806, 144.966], zoom_start=15, tiles="CartoDB positron")
 
-    # Add 3 markers with custom icons
     folium.Marker(
         location=[-37.814442, 144.966106],
         popup="Little Collins St-Swanston St (East)",
@@ -46,105 +63,88 @@ def map():
     ).add_to(m)
 
     folium.Marker(
-        location=[-37.802133, 144.966569],
-        popup="Lygon St (West)",
-        icon=folium.Icon(color="orange", icon="5", prefix="fa")
-    ).add_to(m)
-
-    folium.Marker(
         location=[-37.798773, 144.967363],
         popup="Faraday St-Lygon St (West)",
-        icon=folium.Icon(color="darkgreen", icon="6", prefix="fa")
+        icon=folium.Icon(color="darkgreen", icon="5", prefix="fa")
     ).add_to(m)
 
-    # Display the map in Streamlit
     st_folium(m, width=700)
 
     return m
 
-def make_risk(input_response, input_text, input_color):
-  if input_color == 'blue':
-      chart_color = ['#29b5e8', '#155F7A']
-  if input_color == 'green':
-      chart_color = ['#27AE60', '#12783D']
-  if input_color == 'orange':
-      chart_color = ['#F39C12', '#875A12']
-  if input_color == 'red':
-      chart_color = ['#E74C3C', '#781F16']
+def get_forecast_only():
+    # Format the data
+    melbourne_tz = pytz.timezone("Australia/Melbourne")
+    today = datetime.now(melbourne_tz).date()
+    forecast_df = st.session_state["final_df"]
+    forecast_df.index = pd.to_datetime(forecast_df.index, utc=True)
+
+    forecast_only = forecast_df[forecast_df.index.date >= today]
+    forecast_only.index = forecast_only.index.strftime('%Y-%m-%d %H:%M:%S')
+    forecast_only.index = pd.to_datetime(forecast_only.index)
+    return forecast_only
+
+def get_daily(df, street_columns):
+    daily_prep = df.copy()
+    daily_prep['day'] = daily_prep.index.date
+    valid_days = daily_prep.groupby('day').filter(lambda x: len(x) == 24)
     
-  source = pd.DataFrame({
-      "Topic": ['', input_text],
-      "% value": [100-input_response, input_response]
-  })
-  source_bg = pd.DataFrame({
-      "Topic": ['', input_text],
-      "% value": [100, 0]
-  })
-    
-  plot = alt.Chart(source).mark_arc(innerRadius=45, cornerRadius=25).encode(
-      theta="% value",
-      color= alt.Color("Topic:N",
-                      scale=alt.Scale(
-                          #domain=['A', 'B'],
-                          domain=[input_text, ''],
-                          # range=['#29b5e8', '#155F7A']),  # 31333F
-                          range=chart_color),
-                      legend=None),
-  ).properties(width=130, height=130)
-    
-  text = plot.mark_text(align='center', color="#29b5e8", font="Lato", fontSize=32, fontWeight=700, fontStyle="italic").encode(text=alt.value(f'{input_response} %'))
-  plot_bg = alt.Chart(source_bg).mark_arc(innerRadius=45, cornerRadius=20).encode(
-      theta="% value",
-      color= alt.Color("Topic:N",
-                      scale=alt.Scale(
-                          # domain=['A', 'B'],
-                          domain=[input_text, ''],
-                          range=chart_color),  # 31333F
-                      legend=None),
-  ).properties(width=130, height=130)
-  return plot_bg + plot + text  
 
-def generate_synthetic_weather_data():
-    start_date = datetime.now()
-    days = [start_date + timedelta(days=i) for i in range(16)]
+    daily_totals = valid_days.groupby('day')[street_columns].sum().sum(axis=1).reset_index()
+    daily_totals.columns = ['Date', 'Total Pedestrians']
+    return daily_totals
 
-    # Generate synthetic data
-    data = {
-        "Date": [day.strftime('%Y-%m-%d') for day in days],
-        "Temperature (°C)": np.round(np.random.uniform(10, 25, size=16), 1),  # Random temps between 10°C and 25°C
-        "Cloud %": np.random.randint(0, 101, size=16),  # Random cloud cover percentage (0-100%)
-        "Rain (mm)": np.round(np.random.uniform(0, 20, size=16), 1)  # Random rainfall between 0 and 20 mm
-    }
+street_list = [
+    'Little Collins St-Swanston St (East)', 
+    'Faraday St-Lygon St (West)', 
+    'Melbourne Central',
+    'Chinatown-Lt Bourke St (South)',
+    'Lonsdale St (South)'
+]
 
-    # Convert to DataFrame
-    df = pd.DataFrame(data)
-    return df
+# Main Forecst
+get_forecast_once()
 
-col = st.columns((4, 3), gap='medium')
+# Display
+st.title("Pedestrian Forecast")
 
-with col[0]:
-    st.markdown('#### Data Points')
-    map()
+if st.session_state["final_df"] is not None:
+    # Get the forecast data
+    forecast_only = get_forecast_only()
 
-with col[1]:
-    st.markdown('#### Risk')
-    subcol1, subcol2 = st.columns(2)
-    with subcol1:
-        # Generate and display the first risk plot
-        risk_chart_1 = make_risk(0, 'Zero', 'green')
-        st.altair_chart(risk_chart_1, use_container_width=True)
-    with subcol2:
-        # Generate and display the first risk plot
-        risk_chart_1 = make_risk(100, 'Hundret', 'red')
-        st.altair_chart(risk_chart_1, use_container_width=True)
+    # Get dayliy data
+    daily_totals = get_daily(forecast_only, street_list)    
 
-with col[1]:
-    # Create synthetic weather DataFrame
-    synthetic_weather_df = generate_synthetic_weather_data()
+    col = st.columns((4, 3), gap='medium')
 
-    # Streamlit display
-    st.markdown('#### 16-Day Weather Forecast for Melbourne')
-    st.dataframe(synthetic_weather_df, height=400)
+    with col[0]:
+        st.markdown('#### Data Points')
+        map()
 
 
+    with col[1]:
+        st.markdown('#### Forecast for Melbourne')
 
+        # Create Altair bar chart
+        fig = alt.Chart(daily_totals).mark_bar(size = 100).encode(
+            x=alt.X(
+                'Date',
+                title='Date',
+                axis=alt.Axis(format='%Y-%m-%d', labelAngle=-45, tickCount='day' ),
+                scale=alt.Scale(padding=50)
+            ),
+            y=alt.Y('Total Pedestrians:Q', title='Pedestrians Counted'),
+            tooltip=[
+                alt.Tooltip('Date:T', title='Date', format='%Y-%m-%d'),
+                alt.Tooltip('Total Pedestrians:Q', title='Total Pedestrians')
+            ]
+        ).properties(
+            title='Pedestrian Activity Forecast by Day',
+            width=800,
+            height=400
+        )
+        # Add chart to Streamlit
+        st.altair_chart(fig, use_container_width=True)
+
+else:
+    st.write("No forecast data available.")
