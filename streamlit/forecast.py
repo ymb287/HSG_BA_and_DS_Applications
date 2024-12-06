@@ -6,6 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import holidays
 import joblib
+from tqdm import tqdm
+import warnings
+import streamlit as st
+
+warnings.filterwarnings("ignore", category=FutureWarning, module="xgboost")
 
 # API
 city_name = 'Melbourne'
@@ -14,7 +19,6 @@ lat = -37.810236
 lon = 144.962765
 timezone = 'Australia/Melbourne'
 melbourne_tz = pytz.timezone(timezone)
-australia_holidays = holidays.Australia(state='VIC')
 
 # Function Definitions
 def fetch_weather_data(start_time, end_time):
@@ -25,7 +29,7 @@ def fetch_weather_data(start_time, end_time):
     historical_weather = requests.get(historical_url).json()
     forecast_weather = requests.get(forecast_url).json()
 
-    return historical_data, forecast_data
+    return historical_weather, forecast_weather
 
 # Define weather formating function
 def formate_weather_data_new(jason):
@@ -76,7 +80,7 @@ def merge_and_fill_data(historical_df, forecast_df):
     return combined_df
 
 def add_features(df, holidays_list):
-    #Add public holiday and time-based features
+    # Add public holiday and time-based features
     df['IsPublicHoliday'] = [1 if date in holidays_list else 0 for date in df.index.date]
     df['Hour'] = df.index.hour
     df['Weekday'] = df.index.weekday + 1
@@ -89,167 +93,133 @@ def add_features(df, holidays_list):
     })
     return df
 
+def add_lagged_features(df, target_columns):
+    # Add lagged and rolling features, sticking with model structure
+    for sensor in target_columns:
+        df[f'{sensor}_Lag_1'] = df[sensor].shift(1)
+
+    for sensor in target_columns:
+        df[f'Rolling_7_{sensor}'] = df[sensor].rolling(window=7, min_periods=1).mean()
+    return df
+
+def generate_forecast(progress_bar=None):
+        ### Generate the forecast ###
+    # Load saved data
+    saved_data = pd.read_csv('streamlit/pedestrian_data_filtered.csv', index_col=0, parse_dates=True)
+    last_timestamp = saved_data.index.max()
+
+    new_start_time = int((last_timestamp + timedelta(hours=1)).astimezone(pytz.utc).timestamp())
+    new_end_time = int(melbourne_tz.localize(datetime.now() + timedelta(days=1)).astimezone(pytz.utc).timestamp())
+
+    # Fetch weather data    
+    historical_weather, forecast_weather = fetch_weather_data(new_start_time, new_end_time)
+
+    # Process and merge new data
+    historical_df = formate_weather_data_new(historical_weather)
+    forecast_df = formate_weather_data_new(forecast_weather)
+
+    combined_df = merge_and_fill_data(historical_df, forecast_df)
+
+    australia_holidays = holidays.Australia(state='VIC')
+    weather_final = add_features(combined_df, australia_holidays)
+
+    categorical_columns = ['Weekday', 'Month', 'Season']
+    weather_dummies = pd.get_dummies(weather_final, columns=categorical_columns)
+
+    # Add Nan for sensors
+    target_columns = [
+        'Little Collins St-Swanston St (East)', 
+        'Faraday St-Lygon St (West)', 
+        'Melbourne Central',
+        'Chinatown-Lt Bourke St (South)',
+        'Lonsdale St (South)'
+    ]
+
+    for sensor in target_columns:
+        weather_dummies[sensor] = np.nan
+
+    # Reorder columns and add lagged features
+    old_columns = ['Hour', 'Little Collins St-Swanston St (East)',
+        'Faraday St-Lygon St (West)', 'Melbourne Central',
+        'Chinatown-Lt Bourke St (South)', 'Lonsdale St (South)',
+            'IsPublicHoliday', 'temp', 'humidity', 'rain_1h',
+        'clouds_all', 'Weekday_2', 'Weekday_3', 'Weekday_4', 'Weekday_5',
+        'Weekday_6', 'Weekday_7', 'Month_2', 'Month_3', 'Month_4', 'Month_5',
+        'Month_6', 'Month_7', 'Month_8', 'Month_9', 'Month_10', 'Month_11',
+        'Month_12', 'Season_Spring', 'Season_Summer', 'Season_Winter']
+
+    reordered_df = weather_dummies.reindex(columns=old_columns, fill_value=0)
+
+    lagged_df = add_lagged_features(reordered_df, target_columns)
 
 
+    # Scale the data and add interaction feature
+    scaler = joblib.load('streamlit/models/scaler.pkl')
+    weather_features = ['temp', 'humidity', 'rain_1h', 'clouds_all']
 
-############################################
+    lagged_df[weather_features] = scaler.transform(lagged_df[weather_features])
 
-# Load saved data
-saved_data = pd.read_csv('streamlit/pedestrian_data_filtered.csv', index_col=0, parse_dates=True)
-
-# Fetch weather data
-last_timestamp = saved_data.index.max() # PROBLEMMMMMMMMMMMMMMMMMMMMMMMM
-new_start_time = int((last_timestamp + timedelta(hours=1)).astimezone(pytz.utc).timestamp())
-new_end_time = int((datetime.now(MELBOURNE_TZ) + timedelta(days=1)).astimezone(pytz.utc).timestamp())
-    
-historical_weather, forecast_weather = fetch_weather_data(new_start_time, new_end_time)
-
-# Process and merge new data
-historical_df = formate_weather_data_new(historical_weather)
-forecast_df = formate_weather_data_new(forecast_weather)
-
-combined_df = merge_and_fill_data(historical_df, forecast_df)
-final_df = add_features(combined_df, australia_holidays)
-
-############################################
-# Continue
-############################################
+    lagged_df['Hour'] = lagged_df.index.hour
+    lagged_df['Rain_Holiday'] = lagged_df['rain_1h'] * lagged_df['IsPublicHoliday']
 
 
-# Dummy-encode all categorical columns
-categorical_columns = ['Weekday', 'Month', 'Season']
-df_with_all_dummies = pd.get_dummies(final_df, columns=categorical_columns)
-
-target_columns = [
-    'Little Collins St-Swanston St (East)', 
-    'Faraday St-Lygon St (West)', 
-    'Melbourne Central',
-    'Chinatown-Lt Bourke St (South)',
-    'Lonsdale St (South)'
-]
-
-# Create NA values
-for sensor in target_columns:
-    df_with_all_dummies[sensor] = np.nan
+    # Define features for modelling
+    features = [
+        'IsPublicHoliday', 'Hour',
+        'Weekday_2', 'Weekday_3', 'Weekday_4', 'Weekday_5', 'Weekday_6', 'Weekday_7',
+        'Month_2', 'Month_3', 'Month_4', 'Month_5', 'Month_6', 'Month_7', 'Month_8', 'Month_9', 'Month_10', 'Month_11', 'Month_12',
+        'Season_Spring', 'Season_Summer', 'Season_Winter',
+        'temp', 'humidity', 'rain_1h', 'clouds_all'
+    ] + \
+    [f'Rolling_7_{sensor}' for sensor in target_columns] + \
+    [f'{sensor}_Lag_1' for sensor in target_columns]
 
 
-old_columns = ['Hour', 'Little Collins St-Swanston St (East)',
-       'Faraday St-Lygon St (West)', 'Melbourne Central',
-       'Chinatown-Lt Bourke St (South)', 'Lonsdale St (South)',
-        'IsPublicHoliday', 'temp', 'humidity', 'rain_1h',
-       'clouds_all', 'Weekday_2', 'Weekday_3', 'Weekday_4', 'Weekday_5',
-       'Weekday_6', 'Weekday_7', 'Month_2', 'Month_3', 'Month_4', 'Month_5',
-       'Month_6', 'Month_7', 'Month_8', 'Month_9', 'Month_10', 'Month_11',
-       'Month_12', 'Season_Spring', 'Season_Summer', 'Season_Winter']
+    # Combine saved and new data
+    final_df = pd.concat([saved_data, lagged_df])
+    final_df.sort_index(inplace=True)
 
-reordered_df = df_with_all_dummies.reindex(columns=old_columns, fill_value=0)
+    rows_to_predict = final_df[target_columns].isna().any(axis=1)
+    prediction_start = final_df[target_columns].isna().idxmax()[0]
 
-# Add lagged features (they capture pedestrian flow from the previous hour)
-for sensor in target_columns:
-    reordered_df[f'{sensor}_Lag_1'] = reordered_df[sensor].shift(1)
+    # Initialize a progress bar
+    total_rows = len(final_df[rows_to_predict])
+    counter = 0
 
-# Add rolling averages (capture the short term trends over the last 7 hours)
-for sensor in target_columns:
-    reordered_df[f'Rolling_7_{sensor}'] = reordered_df[sensor].rolling(window=7, min_periods=1).mean()
+    # Prediction
+    for i, row in final_df[rows_to_predict].iterrows():
+        counter += 1
+        progress_bar.progress(counter / total_rows)
+        for street in target_columns:
+            # Load the model for the specific street
+            model_path = f"streamlit/models/{street}_model.joblib"
+            model = joblib.load(model_path)
 
+            # Extract features for the current row
+            X_current = final_df.loc[[i], features]
 
-# Load the scaler
-scaler = joblib.load('models/scaler.pkl')
+            # Predict the target value for the current row
+            predicted_value = round(model.predict(X_current)[0])
+            final_df.at[i, street] = predicted_value
 
-weather_features = ['temp', 'humidity', 'rain_1h', 'clouds_all']
+            # Update lagged features for the next row
+            next_row_index = final_df.index.get_loc(i) + 1
+            if next_row_index < len(final_df):
+                next_row = final_df.iloc[next_row_index]
+                final_df.at[next_row.name, f'{street}_Lag_1'] = predicted_value
+                rolling_feature = f'Rolling_7_{street}'
+                past_values = final_df.loc[:row.name, street].tail(7)
+                final_df.at[next_row.name, rolling_feature] = past_values.mean()
 
-# Apply the same scaling to reordered_df
-reordered_df[weather_features] = scaler.transform(reordered_df[weather_features])
+        # Progress bar
+        if progress_bar:
+            progress_bar.progress(counter / total_rows)
 
-reordered_df['Hour'] = reordered_df.index.hour
-
-# interaction feature
-reordered_df['Rain_Holiday'] = reordered_df['rain_1h'] * reordered_df['IsPublicHoliday']
-
-features = [
-    'IsPublicHoliday', 'Hour',
-    'Weekday_2', 'Weekday_3', 'Weekday_4', 'Weekday_5', 'Weekday_6', 'Weekday_7',
-    'Month_2', 'Month_3', 'Month_4', 'Month_5', 'Month_6', 'Month_7', 'Month_8', 'Month_9', 'Month_10', 'Month_11', 'Month_12',
-    'Season_Spring', 'Season_Summer', 'Season_Winter',
-    'temp', 'humidity', 'rain_1h', 'clouds_all'
-] + \
-[f'Rolling_7_{sensor}' for sensor in target_columns] + \
-[f'{sensor}_Lag_1' for sensor in target_columns]
-
-
-# Combine them and sort them
-final_df = pd.concat([saved_data, reordered_df])
-final_df.sort_index(inplace=True)
-
-rows_to_predict = final_df[target_columns].isna().any(axis=1)
-prediction_start = final_df[target_columns].isna().idxmax()[0]
+    # Save the updated data
+    #final_df.to_csv('streamlit/pedestrian_data_filtered.csv', index=True)
 
 
-import joblib
-from tqdm import tqdm
-
-# Iterate through rows needing predictions
-for i, row in tqdm(final_df[rows_to_predict].iterrows(), total=len(final_df[rows_to_predict])):
-    for street in target_columns:
-        # Load the model for the specific street
-        model_path = f"models/{street}_model.joblib"
-        model = joblib.load(model_path)
-
-        # Extract features for the current row
-        X_current = final_df.loc[[i], features]
-
-        # Predict the target value for the current row
-        predicted_value = model.predict(X_current)[0]
-        predicted_value = round(predicted_value)
-
-        # Update the DataFrame with the predicted value
-        final_df.at[i, street] = predicted_value
-
-        # Update lagged features for the next row
-        next_row_index = final_df.index.get_loc(i) + 1
-        if next_row_index < len(final_df):
-            next_row = final_df.iloc[next_row_index]
-            
-            # Update lagged value for the current street
-            final_df.at[next_row.name, f'{street}_Lag_1'] = predicted_value
-
-            # Update rolling features dynamically (if applicable)
-            rolling_feature = f'Rolling_7_{street}'
-            past_values = final_df.loc[:row.name, street].tail(7)
-            final_df.at[next_row.name, rolling_feature] = past_values.mean()
-
-
-
-import matplotlib.pyplot as plt
-# Plot the pedestrian counts
-
-# Define Melbourne timezone
-melbourne_tz = pytz.timezone("Australia/Melbourne")
-
-# Get today's date in Melbourne time
-today = datetime.now(melbourne_tz)
-
-
-#figsize (450, 350)
-
-for street in target_columns:
-    plt.figure(figsize=(9, 7))#(figsize=(12, 9))
-    plt.plot(final_df.index, final_df[street], label='Pedestrian Count')
-
-    # Add a vertical line at the prediction start
-    plt.axvline(x=prediction_start, color='red', linestyle='--', label='Prediction Start')
-    plt.axvline(x=today, color='blue', linestyle='--', label="Today's Date (Melbourne)")
-
-    # Add labels, title, and legend
-    plt.title(f'Pedestrian Counts for {street}', fontsize=16)
-    plt.xlabel('Time', fontsize=12)
-    plt.ylabel('Pedestrian Count', fontsize=12)
-    plt.legend()
-    plt.grid()
-
-    # Show the plot
-    plt.tight_layout()
-    plt.show()
+    return final_df
 
 
 
