@@ -12,6 +12,7 @@ def generate_forecast_chart(street):
 
     hourly_data = df[[street]].reset_index()
     hourly_data.columns = ['Timestamp', 'Pedestrian Count']
+    hourly_data['Timestamp'] = hourly_data['Timestamp'] + timedelta(hours=11)
     
     chart = alt.Chart(hourly_data).mark_line(point=True).encode(
         x=alt.X('Timestamp:T', title='Time', axis=alt.Axis(format='%Y-%m-%d %H')),

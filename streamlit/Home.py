@@ -79,9 +79,13 @@ def get_forecast_only():
     forecast_df = st.session_state["final_df"]
     forecast_df.index = pd.to_datetime(forecast_df.index, utc=True)
 
+    cutoff = forecast_df[forecast_df.index.date >= today].index.min()
+    cutoff_position = forecast_df.index.get_loc(cutoff)
+    adjusted_position = max(0, cutoff_position - 11) 
+    print(adjusted_position)
+
     forecast_only = forecast_df[forecast_df.index.date >= today]
-    forecast_only.index = forecast_only.index.strftime('%Y-%m-%d %H:%M:%S')
-    forecast_only.index = pd.to_datetime(forecast_only.index)
+    forecast_only = forecast_df.iloc[adjusted_position:]
     return forecast_only
 
 def get_daily(df, street_columns):
