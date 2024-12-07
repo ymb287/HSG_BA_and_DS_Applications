@@ -60,17 +60,17 @@ def render_page(street):
         # Main content
         col = st.columns((3, 7), gap="medium")
         with col[0]:
-            st.markdown("#### Weekly Comparison")
+            st.markdown("#### Comparison with last week")
             current_avg, previous_avg, delta = calculate_weekly_comparison(st.session_state["final_df"], street)
             st.metric(
-                label="Current Week Avg",
+                label="Tomorrows Avg",
                 value=f"{int(current_avg)}",
                 delta=f"{delta:+.1f}",
-                help="Comparison to the previous week's average pedestrian count.",
+                help="Comparison to the previous week's daily average pedestrian count.",
             )
 
         with col[1]:
-            st.markdown("#### 16-Day Forecast")
+            st.markdown("#### 4-Day Forecast")
             forecast_chart = generate_forecast_chart(street)
             st.altair_chart(forecast_chart, use_container_width=True)
 
