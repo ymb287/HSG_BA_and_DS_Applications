@@ -15,10 +15,17 @@ def generate_forecast_chart(street):
     hourly_data['Timestamp'] = hourly_data['Timestamp'] + timedelta(hours=11)
     
     chart = alt.Chart(hourly_data).mark_line(point=True).encode(
-        x=alt.X('Timestamp:T', title='Time', axis=alt.Axis(format='%Y-%m-%d %H')),
+    x=alt.X(
+        'Timestamp:T',
+        title='Time',
+        axis=alt.Axis(
+            format='%A %d-%m',  # Day of the week and date
+            tickCount='day',       # Show ticks only for daily intervals
+        )),
         y=alt.Y('Pedestrian Count:Q', title='Pedestrian Count'),
         tooltip=[
-            alt.Tooltip('Timestamp:T', title='Timestamp', format='%d %H:%M'),  # Full timestamp in tooltips
+            alt.Tooltip('Timestamp:T', title='Hour', format='%H:%M'),
+            alt.Tooltip('Timestamp:T', title='Date', format='%d-%m-%y'),
             alt.Tooltip('Pedestrian Count:Q', title='Pedestrian Count')
         ]
         ).properties(
