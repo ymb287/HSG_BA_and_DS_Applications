@@ -223,6 +223,9 @@ def generate_forecast(progress_bar=None):
     cutoff_time = now_melbourne - timedelta(hours=3)
     cutoff_df = final_df[final_df.index <= cutoff_time]
     cutoff_df.to_csv('streamlit/pedestrian_data_filtered_2.csv', index=True)
+    print("Data saved______________________________________________________")
+    print(final_df)
+    print("Data saved______________________________________________________")
 
     return final_df
 

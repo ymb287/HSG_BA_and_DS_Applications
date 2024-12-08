@@ -10,8 +10,6 @@ import numpy as np
 import pytz
 import altair as alt
 
-# TODO change the numbers since they are not matching the pages
-
 # Setup Streamlit
 st.set_page_config(
     page_title="Home Page: Melbourne Map",
@@ -89,15 +87,28 @@ def get_forecast_only():
     forecast_only = forecast_df.iloc[adjusted_position:]
     return forecast_only
 
-def get_daily(df, street_columns):
+def get_forecast_only():
+    # Format the data
+    melbourne_tz = pytz.timezone("Australia/Melbourne")
+    forecast_df = st.session_state["final_df"]
+    forecast_df.index = forecast_df.index.tz_convert(melbourne_tz)
+    today = datetime.now(melbourne_tz).date()
+    forecast_only  = forecast_df[forecast_df.index.date >= today]
+    return forecast_only
+
+def get_daily(df):
     daily_prep = df.copy()
     daily_prep['day'] = daily_prep.index.date
     valid_days = daily_prep.groupby('day').filter(lambda x: len(x) == 24)
-    
 
-    daily_totals = valid_days.groupby('day')[street_columns].sum().sum(axis=1).reset_index()
-    daily_totals.columns = ['Date', 'Total Pedestrians']
-    return daily_totals
+
+    daily_totals = valid_days.groupby('day').sum(numeric_only=True)
+    daily_totals.index.name = 'Date'
+
+    daily_totals = daily_totals[street_list]
+    daily_totals.reset_index(inplace=True)
+    daylist = daily_totals['Date']
+    return daily_totals, daylist
 
 street_list = [
     'Little Collins St-Swanston St (East)', 
@@ -114,10 +125,8 @@ get_forecast_once()
 st.title("Pedestrian Forecast for Melbourne")
 
 if st.session_state["final_df"] is not None:
-    # Get the forecast data
-    forecast_only = get_forecast_only()
 
-    # Get dayliy data
+    forecast_only = get_forecast_only()
 
     col = st.columns((4, 3), gap='medium')
 
@@ -129,32 +138,32 @@ if st.session_state["final_df"] is not None:
     with col[1]:
         st.markdown('#### Forecast')
 
-        ###################################### TODO Change it to choosing the day and show all streets
+        daily_totals, daylist = get_daily(forecast_only)
 
-        # Add a dropdown for the street selection
         chosen_day = st.selectbox("Select a Day", daylist)
-        daily_totals = get_daily(forecast_only, chosen_day)   
+        chosen_day_data = daily_totals[daily_totals['Date'] == chosen_day]
+
+        melted_data = chosen_day_data.melt(
+            id_vars=['Date'], 
+            var_name='Street', 
+            value_name='Total Pedestrians'
+        )
 
         # Create Altair bar chart
-        fig = alt.Chart(daily_totals).mark_bar(size = 100).encode(
-            x=alt.X(
-                'Date',
-                title='Date',
-                axis=alt.Axis(format='%A', tickCount='day' ),
-                scale=alt.Scale(padding=50)
-            ),
-            y=alt.Y('Total Pedestrians:Q', title='Pedestrians Counted'),
+        fig = alt.Chart(melted_data).mark_bar(size=50).encode(
+            x=alt.X('Street:N', title='Street', axis=alt.Axis(labelAngle=0)),
+            y=alt.Y('Total Pedestrians:Q', title='Pedestrian Count'),
             tooltip=[
-                alt.Tooltip('Date:T', title='Date', format='%Y-%m-%d'),
+                alt.Tooltip('Street:N', title='Street'),
                 alt.Tooltip('Total Pedestrians:Q', title='Total Pedestrians')
             ]
         ).properties(
-            title='Pedestrian Activity Forecast by Day',
+            title=f'Pedestrian Activity for {chosen_day}',
             width=800,
             height=400
         )
-        # Add chart to Streamlit
+
+        # Display the chart in Streamlit
         st.altair_chart(fig, use_container_width=True)
 
-else:
-    st.write("No forecast data available.")
+# TODO chagne chart and add elgend

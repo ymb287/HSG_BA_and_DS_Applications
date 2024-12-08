@@ -15,8 +15,8 @@ def generate_forecast_chart(street):
 
     hourly_data = df[[street]].reset_index()
     hourly_data.columns = ['Timestamp', 'Pedestrian Count']
-    hourly_data['Timestamp'] = hourly_data['Timestamp'] + timedelta(hours=11)
-    
+    hourly_data['Timestamp'] = hourly_data['Timestamp'].dt.tz_localize(None)
+
     # Add a column for weekday
     hourly_data['Weekday'] = hourly_data['Timestamp'].dt.strftime('%A')  # Day name
 
@@ -73,48 +73,106 @@ def calculate_weekly_comparison(df, street):
     return current_avg, previous_avg, current_avg - previous_avg
 
 def map_one(street):
-    # Create a folium map
-    m = folium.Map(location=[-37.80, 144.966], zoom_start=13, tiles="CartoDB positron")
+    # Default center location for the map
+    center_location = [-37.80, 144.966]
 
+    # Initialize the map
+    m = folium.Map(location=center_location, zoom_start=13, tiles="CartoDB positron")
+
+    # Add markers based on the chosen street
     if street == "Little Collins St-Swanston St (East)":
+        center_location = [-37.814442, 144.966106]
         folium.Marker(
-            location=[-37.814442, 144.966106],
+            location=center_location,
             popup="Little Collins St-Swanston St (East)",
             icon=folium.Icon(color="blue", icon="1", prefix="fa")
         ).add_to(m)
 
     elif street == "Lonsdale St (South)":
+        center_location = [-37.811053, 144.966677]
         folium.Marker(
-            location=[-37.811053, 144.966677],
+            location=center_location,
             popup="Lonsdale St (South)",
             icon=folium.Icon(color="purple", icon="2", prefix="fa")
         ).add_to(m)
-    
+
     elif street == "Melbourne Central":
+        center_location = [-37.811042, 144.964422]
         folium.Marker(
-            location=[-37.811042, 144.964422],
+            location=center_location,
             popup="Melbourne Central",
             icon=folium.Icon(color="green", icon="3", prefix="fa")
         ).add_to(m)
 
     elif street == "Chinatown-Lt Bourke St (South)":
+        center_location = [-37.811601, 144.968333]
         folium.Marker(
-            location=[-37.811601, 144.968333],
+            location=center_location,
             popup="Chinatown-Lt Bourke St (South)",
             icon=folium.Icon(color="red", icon="4", prefix="fa")
         ).add_to(m)
 
     elif street == "Faraday St-Lygon St (West)":
+        center_location = [-37.798773, 144.967363]
         folium.Marker(
-            location=[-37.798773, 144.967363],
+            location=center_location,
             popup="Faraday St-Lygon St (West)",
             icon=folium.Icon(color="darkgreen", icon="5", prefix="fa")
         ).add_to(m)
 
-    st_folium(m, width=400, height=300)
+    m.location = center_location
+    st_folium(m, width=250, height=250)
 
     return m
 
+def min_max_values(street):
+    df = get_forecast_only()
+
+    hourly_data = df[[street]].reset_index()
+    hourly_data.columns = ['Timestamp', 'Pedestrian Count']
+    hourly_data['Timestamp'] = hourly_data['Timestamp'].dt.tz_localize(None)
+
+    hourly_data['Date'] = hourly_data['Timestamp'].dt.date  
+    hourly_data['Time'] = hourly_data['Timestamp'].dt.time  
+
+    valid_days = hourly_data.groupby('Date').filter(lambda x: len(x) == 24)
+
+
+    # Group by the 'Date' column
+    daily_summary = (
+        valid_days.groupby('Date')
+        .apply(lambda group: pd.Series({
+            'Min Count': group['Pedestrian Count'].min(),
+            'Min Time': group.loc[group['Pedestrian Count'].idxmin(), 'Timestamp'].strftime('%H:%M'),
+            'Max Count': group['Pedestrian Count'].max(),
+            'Max Time': group.loc[group['Pedestrian Count'].idxmax(), 'Timestamp'].strftime('%H:%M'),
+        }))
+        .reset_index()
+    )
+
+    # Display the result
+    daily_summary.columns = ['Date', 'Min Count', 'Min Time', 'Max Count', 'Max Time']
+    return daily_summary
+
+def get_hourly_values_for_date(df, street, chosen_date):
+    # Prepare the data
+    hourly_data = df[[street]].reset_index()
+    hourly_data.columns = ['Timestamp', 'Pedestrian Count']
+    hourly_data['Timestamp'] = hourly_data['Timestamp'].dt.tz_localize(None) 
+
+    hourly_data['Date'] = hourly_data['Timestamp'].dt.date  
+    hourly_data['Hour'] = hourly_data['Timestamp'].dt.hour  
+
+    date_data = hourly_data[hourly_data['Date'] == chosen_date]
+
+    hourly_table = date_data.pivot_table(
+        index='Date',
+        columns='Hour',
+        values='Pedestrian Count',
+        aggfunc='first'
+    )
+
+    return hourly_table
 
 
 def render_page(street):
@@ -149,8 +207,8 @@ def render_page(street):
                     help="Comparison to the previous week's daily average pedestrian count.",
                 )
 
-        # TODO Add min max values in a table
-            st.write("#### MINMAX")
+            st.dataframe(min_max_values(street))
+
 
         with col[1]:
             st.markdown("#### 4-Day Forecast")
@@ -160,7 +218,8 @@ def render_page(street):
 
             forecast_only = get_forecast_only()
             selected_day = st.selectbox("Select a Day", np.unique(forecast_only[street].index.date))
-            ### TODO Add list for hourly values
+
+            st.dataframe(get_hourly_values_for_date(forecast_only, street, selected_day))
 
     else:
         st.error("No data available. Please run the forecast first, by entering the Home page.")
