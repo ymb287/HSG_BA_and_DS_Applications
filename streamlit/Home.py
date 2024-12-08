@@ -10,6 +10,7 @@ import numpy as np
 import pytz
 import altair as alt
 
+# TODO change the numbers since they are not matching the pages
 
 # Setup Streamlit
 st.set_page_config(
@@ -45,21 +46,21 @@ def map():
     ).add_to(m)
 
     folium.Marker(
+        location=[-37.811053, 144.966677],
+        popup="Lonsdale St (South)",
+        icon=folium.Icon(color="purple", icon="2", prefix="fa")
+    ).add_to(m)
+    
+    folium.Marker(
         location=[-37.811042, 144.964422],
         popup="Melbourne Central",
-        icon=folium.Icon(color="green", icon="2", prefix="fa")
+        icon=folium.Icon(color="green", icon="3", prefix="fa")
     ).add_to(m)
 
     folium.Marker(
         location=[-37.811601, 144.968333],
         popup="Chinatown-Lt Bourke St (South)",
-        icon=folium.Icon(color="red", icon="3", prefix="fa")
-    ).add_to(m)
-
-    folium.Marker(
-        location=[-37.811053, 144.966677],
-        popup="Lonsdale St (South)",
-        icon=folium.Icon(color="purple", icon="4", prefix="fa")
+        icon=folium.Icon(color="red", icon="4", prefix="fa")
     ).add_to(m)
 
     folium.Marker(
@@ -110,31 +111,36 @@ street_list = [
 get_forecast_once()
 
 # Display
-st.title("Pedestrian Forecast")
+st.title("Pedestrian Forecast for Melbourne")
 
 if st.session_state["final_df"] is not None:
     # Get the forecast data
     forecast_only = get_forecast_only()
 
     # Get dayliy data
-    daily_totals = get_daily(forecast_only, street_list)    
 
     col = st.columns((4, 3), gap='medium')
 
     with col[0]:
-        st.markdown('#### Data Points')
+        st.markdown('#### Pedestrian Sensor Points')
         map()
 
 
     with col[1]:
-        st.markdown('#### Forecast for Melbourne')
+        st.markdown('#### Forecast')
+
+        ###################################### TODO Change it to choosing the day and show all streets
+
+        # Add a dropdown for the street selection
+        chosen_day = st.selectbox("Select a Day", daylist)
+        daily_totals = get_daily(forecast_only, chosen_day)   
 
         # Create Altair bar chart
         fig = alt.Chart(daily_totals).mark_bar(size = 100).encode(
             x=alt.X(
                 'Date',
                 title='Date',
-                axis=alt.Axis(format='%Y-%m-%d', labelAngle=-45, tickCount='day' ),
+                axis=alt.Axis(format='%A', tickCount='day' ),
                 scale=alt.Scale(padding=50)
             ),
             y=alt.Y('Total Pedestrians:Q', title='Pedestrians Counted'),
