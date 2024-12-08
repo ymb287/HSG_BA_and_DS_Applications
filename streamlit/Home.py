@@ -71,26 +71,12 @@ def map():
 
     return m
 
+
 def get_forecast_only():
     # Format the data
     melbourne_tz = pytz.timezone("Australia/Melbourne")
-    today = datetime.now(melbourne_tz).date()
     forecast_df = st.session_state["final_df"]
     forecast_df.index = pd.to_datetime(forecast_df.index, utc=True)
-
-    cutoff = forecast_df[forecast_df.index.date >= today].index.min()
-    cutoff_position = forecast_df.index.get_loc(cutoff)
-    adjusted_position = max(0, cutoff_position - 11) 
-    print(adjusted_position)
-
-    forecast_only = forecast_df[forecast_df.index.date >= today]
-    forecast_only = forecast_df.iloc[adjusted_position:]
-    return forecast_only
-
-def get_forecast_only():
-    # Format the data
-    melbourne_tz = pytz.timezone("Australia/Melbourne")
-    forecast_df = st.session_state["final_df"]
     forecast_df.index = forecast_df.index.tz_convert(melbourne_tz)
     today = datetime.now(melbourne_tz).date()
     forecast_only  = forecast_df[forecast_df.index.date >= today]
