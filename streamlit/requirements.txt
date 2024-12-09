@@ -9,3 +9,6 @@ folium
 plotly
 matplotlib
 holidays
+joblib                                                           
+tqdm 
+warnings                                                         
