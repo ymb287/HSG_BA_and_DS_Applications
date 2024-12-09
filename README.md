@@ -1,105 +1,48 @@
-## **How to Work Together**
+# Pedestrian Forecast Melbourne Center
 
-This guide explains how to set up the repository and work together efficiently on our project.
+This project was conducted during the course "Business Analytics and Data Science Applications". 
+Our goal is to provide Restaurants and SMEs (including Marketing Agencies) with information, so they can make informed decisions for: for the SMEs, choosing the right time and right place for digital billboards marketing actions in the city center of Melbourne, as well as, for the restaurants in the location of our sensors, to match their staffing to the related Pedestrian predictions close to them, anticipating the lwos and peaks in predicted demand.
 
-
-### **Step 1: Setting Up Git**
-
-If you don't have Git installed, follow these steps:
-
-1. **Download Git**  
-   - Go to the [Git website](https://git-scm.com/) and download the installer for your operating system.
-
-2. **Install Git**  
-   - Run the installer and follow the setup instructions.
-
-3. **Check Git Installation**  
-   - Open your terminal (Command Prompt, PowerShell, or a terminal on macOS/Linux).
-   - Run the following command to verify Git is installed:
-     ```bash
-     git --version
-     ```
-     You should see a version number (e.g., `git version 2.x.x`).
-
-4. **Configure Git**  
-   Set your name and email for commits:
-   ```bash
-   git config --global user.name "Your Name"
-   git config --global user.email "youremail@example.com"
-   ```
+Our approach uses historic weather and pedestrian counts of five sensors in the city center of Melbourne, ranging from April 2022 until October 2024, for concentrating of post-covid trends, and reduce the noise of the pandemic from our predictions. 
 
 ---
 
+## Repo Structure
 
-### **Repository Setup**
+0 - Data
+  1.  `raw` - Data structures created by various python scripts for inital exploratory data analysis and modeling.
+  2.  `processed` - Final data sets both 6 locations and the five final chosen ones
 
-Follow these steps to set up the project repository on your local machine:
+01 - shared
+  1.  `data_check.ipynb` - Exploring the data, cleaning it, pre-processing it
+  2.  `data_loader.py` - Scraping tool for pedestrian count data
 
-1. **Navigate to Your Desired Folder**  
-    Before cloning the repository, navigate to the folder where you want the project to be stored. For example:
-    ```bash
-   cd /path/to/your/desired/folder
-   ```
+02 - Models used for Prediction and Benchmarking
+  1. First layer, folders for each models used, Exponential smoothing, Sarima, Prophet, XGB, as well as the Plots for each streets and each model
+  2. Within every model's folders, the ipynb file for the model preiction, a csv with the model prediction as well as the pkl files for streamlit application
 
-2. **Clone the Repository**  
-   Open your terminal and run:
-   ```bash
-   git clone https://github.com/ymb287/HSG_BA_and_DS_Applications.git
-   ```
-
-3. **Navigate to the Repository**  
-   Move into the project folder:
-   ```bash
-   cd HSG_BA_and_DS_Applications
-   ```
-
-4. **Start Working**  
-   You're ready to contribute! Follow the workflow below.
+03 - streamlit
+  1. ???
 
 ---
 
-### **How to Work on the Repository**
-
-Each person (Jakob, Yannik, Sonya, Jules) works in their designated folder to keep things organized and avoid conflicts.
-
-1. **Work in Your Folder**  
-   Add all your work (notebooks, scripts, results, etc.) to your folder:
-   - Jakob: `person_jakob/`
-   - Yannik: `person_yannik/`
-   - Sonya: `person_sonya/`
-   - Jules: `person_jules/`
-
-2. **Pull the Latest Changes**  
-   Before starting any work, make sure you have the latest updates:
-   ```bash
-   git pull origin main
-   ```
-
-3. **Add and Commit Changes**  
-   After making changes, save them to the local repository:
-   ```bash
-   git add .
-   git commit -m "Descriptive message about your changes"
-   ```
-
-4. **Push Your Changes**  
-   Upload your changes to GitHub:
-   ```bash
-   git push origin main
-   ```
+## Installation
+To set up this project, clone the repository and install the required dependencies:
+```bash
+git clone <repository-url>
+cd <repository-name>
+pip install [dependencies]
+```
 
 ---
-      Alternatively you can also work with the source control in VS Code
----
 
+## Miscellaneous 
 
-### **Best Practices**
+App link:
+- https://hsgbaanddsapplications-umjzpjndrfvquxiwaku9g9.streamlit.app/
 
-1. **Stay Organized**  
-   - Only work in your designated folder unless it's a shared file (in `shared/`).
+Data sources:
+- Historic Pedestrian Forecasts - https://www.pedestrian.melbourne.vic.gov.au/#date=09-12-2024&time=8
+- Historic Weather Data - https://openweathermap.org/history-bulk
+- Real-time Weather Data - https://openweathermap.org/api
 
-2. **Use Shared Functions**  
-   - Use standardized code from `shared/` for consistency.
-
-3. **Pull First, Push Later**  
-   - Always pull the latest changes before starting and push your updates once done.
