@@ -1,5 +1,5 @@
 from layout import render_page
 
-street = 'Faraday St-Lygon St (West)'
+street = 'Lonsdale St (South)'
 
 render_page(street)
