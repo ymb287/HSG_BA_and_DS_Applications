@@ -22,7 +22,16 @@ Our approach uses historic weather and pedestrian counts of five sensors in the 
   2. Within every model's folders, the ipynb file for the model preiction, a csv with the model prediction as well as the pkl files for streamlit application
 
 03 - streamlit
-  1. ???
+  1. `Home.py`- The Home page of the Web App dashboard
+  2. Folder `pages` including all the streets subpages python files for the dashboard on streamlit
+  3. `__init__.py`Empty Python file
+  4. Folder `__pycache__` Created to store the compiled versions of Pythons scripts for the Streamlit Web Application. Helps to execute the code faster by skipping the steps of rec-compiling the source code if it has not changed (which is the case now)
+  5. `forecast.py`The actual forecasts of the XGB Model (best performing one from the benchmark) python file
+  6. `layout?.py` Layout of the web app visualisations within the different dashboard pages
+  7. Folder Models in which the model for each street is saved in pkl format for the streamlit application, as well as the scaler for the latter
+  8. `requirement.txt`All the Python packages dependencies needed for running the code of the streamlit Web App application 
+  9. `pedestrian_data_filtered_2.csv`
+  10. `test_api.ipynb`Jupyter notebook for testing the Openweather API for the streamlit model integration
 
 ---
 
