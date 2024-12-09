@@ -10,4 +10,12 @@ plotly
 matplotlib
 holidays
 joblib                                                           
-tqdm                                                          
+tqdm         
+sklearn    
+statsmodels   
+xgboost
+itertools
+pickle
+pmdarima
+
+
