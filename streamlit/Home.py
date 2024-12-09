@@ -44,9 +44,9 @@ def map():
     ).add_to(m)
 
     folium.Marker(
-        location=[-37.811053, 144.966677],
-        popup="Lonsdale St (South)",
-        icon=folium.Icon(color="purple", icon="2", prefix="fa")
+        location=[-37.798773, 144.967363],
+        popup="Faraday St-Lygon St (West)",
+        icon=folium.Icon(color="darkgreen", icon="2", prefix="fa")
     ).add_to(m)
     
     folium.Marker(
@@ -62,9 +62,9 @@ def map():
     ).add_to(m)
 
     folium.Marker(
-        location=[-37.798773, 144.967363],
-        popup="Faraday St-Lygon St (West)",
-        icon=folium.Icon(color="darkgreen", icon="5", prefix="fa")
+        location=[-37.811053, 144.966677],
+        popup="Lonsdale St (South)",
+        icon=folium.Icon(color="purple", icon="5", prefix="fa")
     ).add_to(m)
 
     st_folium(m, width=700)
@@ -117,12 +117,12 @@ if st.session_state["final_df"] is not None:
     col = st.columns((4, 3), gap='medium')
 
     with col[0]:
-        st.markdown('#### Pedestrian Sensor Points')
+        st.markdown('#### Pedestrian Sensor Points', help = 'Sensor points for pedestrian activity in Melbourne')
         map()
 
 
     with col[1]:
-        st.markdown('#### Forecast')
+        st.markdown('#### Forecast', help = 'Forecast for cummulative pedestrian activity for a chosen day')
 
         daily_totals, daylist = get_daily(forecast_only)
 
@@ -135,9 +135,15 @@ if st.session_state["final_df"] is not None:
             value_name='Total Pedestrians'
         )
 
+        # Exchange the street names with numbers and save the mapping
+        street_mapping = {street: i+1 for i, street in enumerate(street_list)}
+        melted_data['Street Number'] = melted_data['Street'].map(street_mapping)
+
+        print(street_mapping)
+
         # Create Altair bar chart
         fig = alt.Chart(melted_data).mark_bar(size=50).encode(
-            x=alt.X('Street:N', title='Street', axis=alt.Axis(labelAngle=0)),
+            x=alt.X('Street Number:N', title='Street', axis=alt.Axis(labelAngle=0)),
             y=alt.Y('Total Pedestrians:Q', title='Pedestrian Count'),
             tooltip=[
                 alt.Tooltip('Street:N', title='Street'),
@@ -151,5 +157,9 @@ if st.session_state["final_df"] is not None:
 
         # Display the chart in Streamlit
         st.altair_chart(fig, use_container_width=True)
+        st.markdown("##### Legend")
+        for key, value in street_mapping.items():
+            sub_col_legend = st.columns((1,7))
+            sub_col_legend[0].write(f"{value}")
+            sub_col_legend[1].write(f"{key}")
 
-# TODO chagne chart and add elgend

@@ -174,11 +174,10 @@ def get_hourly_values_for_date(df, street, chosen_date):
 
     return hourly_table
 
-
 def render_page(street):
     # Set up Streamlit page
     st.set_page_config(
-        page_title=f"Pedestrian Forecast: {street}",
+        page_title=f"Forecast {street}",
         page_icon="👣",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -186,7 +185,7 @@ def render_page(street):
     alt.themes.enable("dark")
 
     # Page Title
-    st.markdown(f"### Pedestrian Forecast for {street}")
+    st.markdown(f"### Pedestrian Forecast for {street}")    
 
     if st.session_state["final_df"] is not None:
         # Main content
@@ -195,29 +194,30 @@ def render_page(street):
         with col[0]:
             subcol1, _,subcol2 = st.columns((10,1,10), gap="medium")
             with subcol1:
-                st.markdown("#### Pedestrian Sensor Points")
+                st.markdown("#### Sensor Points", help = "Location of the sensor point on the map")
                 map_one(street)
             with subcol2:
-                st.markdown("#### Comparison with last week")
+                st.markdown("#### Comparison with last Week", help = "Comparison of the hourly average with the previous week's same day hourly average.")
                 current_avg, previous_avg, delta = calculate_weekly_comparison(st.session_state["final_df"], street)
                 st.metric(
-                    label="Tomorrows Avg",
+                    label="Tomorrows Hourly Avg",
                     value=f"{int(current_avg)}",
                     delta=f"{delta:+.1f}",
-                    help="Comparison to the previous week's daily average pedestrian count.",
+                    help="Comparison to the previous week's same day hourly average.",
                 )
 
+            st.markdown("#### Minimum and Maximum Values per Day", help = "Minimum and Maximum pedestrian count per day")
             st.dataframe(min_max_values(street))
 
 
         with col[1]:
-            st.markdown("#### 4-Day Forecast")
+            st.markdown("#### 4-Day Forecast", help = "Hourly forecast for the next 4 days")
             forecast_chart = generate_forecast_chart(street)
             st.altair_chart(forecast_chart, use_container_width=True)
 
 
             forecast_only = get_forecast_only()
-            selected_day = st.selectbox("Select a Day", np.unique(forecast_only[street].index.date))
+            selected_day = st.selectbox("Select a Day for ", np.unique(forecast_only[street].index.date))
 
             st.dataframe(get_hourly_values_for_date(forecast_only, street, selected_day))
 
