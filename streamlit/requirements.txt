@@ -11,7 +11,7 @@ matplotlib
 holidays
 joblib                                                           
 tqdm         
-sklearn    
+scikit-learn    
 statsmodels   
 xgboost
 itertools
