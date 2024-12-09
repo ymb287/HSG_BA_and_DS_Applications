@@ -14,10 +14,6 @@ tqdm
 scikit-learn    
 statsmodels   
 xgboost
-itertools
 pickle
 pmdarima
-
 selenium
-streamlit_folium
-webdriver_manager
