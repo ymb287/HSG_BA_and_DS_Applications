@@ -217,7 +217,7 @@ def render_page(street):
 
 
             forecast_only = get_forecast_only()
-            selected_day = st.selectbox("Select a Day for ", np.unique(forecast_only[street].index.date))
+            selected_day = st.selectbox("Select a Day", np.unique(forecast_only[street].index.date))
 
             st.dataframe(get_hourly_values_for_date(forecast_only, street, selected_day))
 

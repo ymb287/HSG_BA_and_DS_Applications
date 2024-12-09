@@ -122,7 +122,7 @@ if st.session_state["final_df"] is not None:
 
 
     with col[1]:
-        st.markdown('#### Forecast', help = 'Forecast for cummulative pedestrian activity for a chosen day')
+        st.markdown('#### Forecast for all streets', help = 'Forecast for cummulative pedestrian activity for a chosen day')
 
         daily_totals, daylist = get_daily(forecast_only)
 
@@ -138,8 +138,6 @@ if st.session_state["final_df"] is not None:
         # Exchange the street names with numbers and save the mapping
         street_mapping = {street: i+1 for i, street in enumerate(street_list)}
         melted_data['Street Number'] = melted_data['Street'].map(street_mapping)
-
-        print(street_mapping)
 
         # Create Altair bar chart
         fig = alt.Chart(melted_data).mark_bar(size=50).encode(
