@@ -10,5 +10,4 @@ plotly
 matplotlib
 holidays
 joblib                                                           
-tqdm 
-warnings                                                         
+tqdm                                                          
