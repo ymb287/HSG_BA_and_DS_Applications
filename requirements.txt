@@ -1,9 +1,0 @@
-streamlit
-pandas
-numpy
-datetime
-altair
-pytz
-streamlit-folium
-folium
-plotly
