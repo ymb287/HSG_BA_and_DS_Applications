@@ -7,3 +7,4 @@ pytz
 streamlit-folium
 folium
 plotly
+matplotlib
