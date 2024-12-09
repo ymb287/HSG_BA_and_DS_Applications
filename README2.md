@@ -1,7 +1,7 @@
 # Pedestrian Forecast Melbourne Center
 
 This project was conducted during the course "Business Analytics and Data Science Applications". 
-Our goal is to provide Restaurant and SMEs with information, so they can make informed decisions for marketing in the city center of Melbourne (SMEs) as well as match staffing of their restaurants and Pedestrian predictions around the latter, adapting for before unexpected peaks or lows. 
+Our goal is to provide Restaurants and SMEs (including Marketing Agencies) with information, so they can make informed decisions for: for the SMEs, choosing the right time and right place for digital billboards marketing actions in the city center of Melbourne, as well as, for the restaurants in the location of our sensors, to match their staffing to the related Pedestrian predictions close to them, anticipating the lwos and peaks in predicted demand.
 
 Our approach uses historic weather and pedestrian counts of five sensors in the city center of Melbourne, ranging from April 2022 until October 2024, for concentrating of post-covid trends, and reduce the noise of the pandemic from our predictions. 
 
@@ -12,7 +12,6 @@ Our approach uses historic weather and pedestrian counts of five sensors in the 
 0 - Data
   1.  `raw` - Data structures created by various python scripts for inital exploratory data analysis and modeling.
   2.  `processed` - Final data sets both 6 locations and the five final chosen ones
-
 
 01 - shared
   1.  `data_check.ipynb` - Exploring the data, cleaning it, pre-processing it
@@ -41,10 +40,10 @@ pip install [dependencies]
 ## Miscellaneous 
 
 App link:
-- put the actual link
+- Put the link here
 
 Data sources:
-- Historic Pedestrian Forecasts - put the actual link
+- Historic Pedestrian Forecasts - https://www.pedestrian.melbourne.vic.gov.au/#date=09-12-2024&time=8
 - Historic Weather Data - https://openweathermap.org/history-bulk
 - Real-time Weather Data - https://openweathermap.org/api
 
