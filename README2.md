@@ -15,8 +15,7 @@ Our approach uses historic weather and pedestrian counts of five sensors in the 
 
 01 - shared
   1.  `data_check.ipynb` - Exploring the data, cleaning it, pre-processing it
-  2.  `data_check_2.ipynb` - ??
-  3.  `data_loader.py` - Selenium Web Driver
+  2.  `data_loader.py` - Scraping tool for pedestrian count data
 
 02 - Models used for Prediction and Benchmarking
   1. First layer, folders for each models used, Exponential smoothing, Sarima, Prophet, XGB, as well as the Plots for each streets and each model
@@ -40,7 +39,7 @@ pip install [dependencies]
 ## Miscellaneous 
 
 App link:
-- Put the link here
+- https://hsgbaanddsapplications-umjzpjndrfvquxiwaku9g9.streamlit.app/
 
 Data sources:
 - Historic Pedestrian Forecasts - https://www.pedestrian.melbourne.vic.gov.au/#date=09-12-2024&time=8
