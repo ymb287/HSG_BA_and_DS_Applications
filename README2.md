@@ -30,7 +30,7 @@ Our approach uses historic weather and pedestrian counts of five sensors in the 
   6. `layout?.py` Layout of the web app visualisations within the different dashboard pages
   7. Folder Models in which the model for each street is saved in pkl format for the streamlit application, as well as the scaler for the latter
   8. `requirement.txt`All the Python packages dependencies needed for running the code of the streamlit Web App application 
-  9. `pedestrian_data_filtered_2.csv`
+  9. `pedestrian_data_filtered_2.csv` Data Set of the Historical data from Melbourne pedestrian movement on the 5 selcted streets including the external variables of weather, structured the same way as the API calls will bring it into the modeling of the predictions.
   10. `test_api.ipynb`Jupyter notebook for testing the Openweather API for the streamlit model integration
 
 ---
