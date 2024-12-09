@@ -24,7 +24,7 @@ Our approach uses historic weather and pedestrian counts of five sensors in the 
 03 - streamlit
   1. `Home.py`- The Home page of the Web App dashboard
   2. Folder `pages` including all the streets subpages python files for the dashboard on streamlit
-  3. `__init__.py`Empty Python file
+  3. `__init__.py`For importing functions in the folder
   4. Folder `__pycache__` Created to store the compiled versions of Pythons scripts for the Streamlit Web Application. Helps to execute the code faster by skipping the steps of rec-compiling the source code if it has not changed (which is the case now)
   5. `forecast.py`The actual forecasts of the XGB Model (best performing one from the benchmark) python file
   6. `layout.py` Layout of the web app visualisations within the different dashboard pages
