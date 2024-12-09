@@ -1,7 +1,7 @@
 # Pedestrian Forecast Melbourne Center
 
 This project was conducted during the course "Business Analytics and Data Science Applications". 
-Our goal is to provide Restaurants and SMEs (including Marketing Agencies) with information, so they can make informed decisions for: for the SMEs, choosing the right time and right place for digital billboards marketing actions in the city center of Melbourne, as well as, for the restaurants in the location of our sensors, to match their staffing to the related Pedestrian predictions close to them, anticipating the lwos and peaks in predicted demand.
+Our goal is to provide Restaurants and Marketing Agencies (MA) and their clients with pedestrian movements information, so they can make informed decisions for: for the SMEs, choosing the right time and right place for digital billboards marketing actions in the city center of Melbourne, as well as, for the restaurants in the location of our sensors, to match their staffing to the related Pedestrian predictions close to their location, anticipating the lwos and peaks of movement in the city center.
 
 Our approach uses historic weather and pedestrian counts of five sensors in the city center of Melbourne, ranging from April 2022 until October 2024, for concentrating of post-covid trends, and reduce the noise of the pandemic from our predictions. 
 
