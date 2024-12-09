@@ -27,7 +27,7 @@ Our approach uses historic weather and pedestrian counts of five sensors in the 
   3. `__init__.py`Empty Python file
   4. Folder `__pycache__` Created to store the compiled versions of Pythons scripts for the Streamlit Web Application. Helps to execute the code faster by skipping the steps of rec-compiling the source code if it has not changed (which is the case now)
   5. `forecast.py`The actual forecasts of the XGB Model (best performing one from the benchmark) python file
-  6. `layout`.py` Layout of the web app visualisations within the different dashboard pages
+  6. `layout.py` Layout of the web app visualisations within the different dashboard pages
   7. Folder Models in which the model for each street is saved in pkl format for the streamlit application, as well as the scaler for the latter
   8. `requirement.txt`All the Python packages dependencies needed for running the code of the streamlit Web App application 
   9. `pedestrian_data_filtered_2.csv` Data Set of the Historical data from Melbourne pedestrian movement on the 5 selcted streets including the external variables of weather, structured the same way as the API calls will bring it into the modeling of the predictions.
