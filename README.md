@@ -19,7 +19,7 @@ Our approach uses historic weather and pedestrian counts of five sensors in the 
 
 02 - Models used for Prediction and Benchmarking
   1. First layer, folders for each models used, Exponential smoothing, Sarima, Prophet, XGB, as well as the Plots for each streets and each model
-  2. Within every model's folders, the ipynb file for the model preiction, a csv with the model prediction as well as the pkl files for streamlit application
+  2. Within every model's folders, the ipynb file for the model prediction, a csv with the model prediction as well as the pkl files for streamlit application
 
 03 - streamlit
   1. `Home.py`- The Home page of the Web App dashboard
